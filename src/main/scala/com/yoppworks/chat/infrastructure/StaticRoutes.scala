@@ -5,5 +5,10 @@ import akka.http.scaladsl.server.Route
 
 
 trait StaticRoutes {
-  val staticRoutes: Route = ???
+  val staticRoutes: Route =
+    pathEndOrSingleSlash {
+      get {
+        complete("Hello World")
+      }
+    }
 }
