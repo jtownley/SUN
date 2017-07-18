@@ -17,18 +17,21 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
 trait ChatRoutes extends JsonSupport {
 
-//  val api: Chat
+  val api: Chat
 
   val chatRoutes: Route = pathPrefix("api") {
     path("chat") {
-      get {
-        val source: Source[Int, Any] = Source(Range(0, 200000))
-        val flow: Flow[Int, ChatMessage, Any] = Flow[Int].map(num => {
-          Thread.sleep(1000)
-          ChatMessage("System", s"Message: $num", "Main")
-        })
-        complete(source.via(flow))
-      }
+      post {
+        entity(as[ChatMessage]) { message =>
+          val result = api.publishOneMessage(message)
+          complete(result)
+        }
+      } ~ get {
+          parameters("topic", "client") { (topic, client) =>
+            println(s"Recieved Request for $topic for client $client")
+            complete(api.getMessages(topic, client))
+          }
+        }
     }
   }
 }

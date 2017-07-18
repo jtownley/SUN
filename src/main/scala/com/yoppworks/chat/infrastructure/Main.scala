@@ -11,7 +11,9 @@ object Main extends App with StaticRoutes with ChatRoutes{
   implicit val system = ActorSystem("SafetyDance")
   implicit val materializer = ActorMaterializer()
 
-  //  val api : Chat = ???
+  val publisher = new KafkaChatMessagePublisher
+  val consumer = new KafkaChatMessageConsumer
+  val api: Chat = new Chat(publisher, consumer)
 
   val route = staticRoutes ~ chatRoutes
 

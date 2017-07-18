@@ -12,6 +12,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class KafkaChatMessagePublisher(implicit val system: ActorSystem, implicit val materializer: ActorMaterializer) extends ChatMessagePublisher {
 
-  def one(message: ChatMessage) = ???
+  private val serverAddress = "localhost:9092"
 
+  private val keySerializer = new ByteArraySerializer
+  private val valueSerializer = new StringSerializer
+  val producerSettings = ProducerSettings(system, keySerializer, valueSerializer).withBootstrapServers(serverAddress)
+
+  def one(message: ChatMessage) = {
+    println("Publishing: " + message)
+    Source(List(message))
+      .map( message => new ProducerRecord[Array[Byte], String](message.room, message.asJsonString))
+      .runWith(Producer.plainSink(producerSettings)).map(_ => message)
+  }
 }

@@ -13,7 +13,16 @@ import org.apache.kafka.common.serialization.{ ByteArrayDeserializer, StringDese
 import scala.concurrent.Future
 
 class KafkaChatMessageConsumer(implicit val system: ActorSystem, implicit val materializer: ActorMaterializer) extends ChatMessageConsumer {
+  private val serverAddress = "localhost:9092"
 
-  def  get(topic: String, client: String) : Source[ChatMessage,Consumer.Control] = ???
+  def  get(topic: String, client: String) : Source[ChatMessage,Consumer.Control] = {
+    val consumerSettings = ConsumerSettings(system, new ByteArrayDeserializer, new StringDeserializer)
+      .withBootstrapServers(serverAddress)
+      .withGroupId(client)
+      .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
+    val subscription = Subscriptions.topics(topic)
+
+    Consumer.plainSource(consumerSettings, subscription).mapAsync(1)(v => Future.successful(ChatMessage(v.value())))
+  }
 }
